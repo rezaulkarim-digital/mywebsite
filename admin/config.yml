@@ -1,0 +1,22 @@
+backend:
+  name: github
+  repo: rezaulkarim-digital/mywebsite
+
+media_folder: /uploads
+public_folder: /uploads
+
+collections:
+  - name: gallery
+    label: Photos
+    files:
+      - name: photos
+        label: Photos
+        file: data/photos.json
+        format: json
+        fields:
+          - label: Photo list
+            name: items
+            widget: list
+            fields:
+              - { label: Photo, name: image, widget: image }
+              - { label: Title, name: title, widget: string, required: false }
