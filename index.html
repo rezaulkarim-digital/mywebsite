@@ -19,7 +19,7 @@
       align-items: center;
       justify-content: center;
       text-align: center;
-      padding: 40px 20px;
+      padding: 40px 20px 70px;
     }
     .content {
       max-width: 900px;
@@ -77,6 +77,17 @@
     .gallery figure {
       margin: 0;
     }
+    .admin-link {
+      position: fixed;
+      right: 14px;
+      bottom: 12px;
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.45);
+      text-decoration: none;
+    }
+    .admin-link:hover {
+      color: rgba(255, 255, 255, 0.9);
+    }
   </style>
 </head>
 <body>
@@ -89,6 +100,8 @@
     </div>
     <div class="gallery" id="gallery"></div>
   </div>
+
+  <a class="admin-link" href="/admin/">Admin</a>
 
   <script>
     fetch('data/photos.json?v=' + Date.now())
