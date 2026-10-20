@@ -6,6 +6,19 @@ media_folder: /uploads
 public_folder: /uploads
 
 collections:
+  - name: site
+    label: Website Info
+    files:
+      - name: info
+        label: Name, Intro and Main Photo
+        file: data/site.json
+        format: json
+        fields:
+          - { label: Name, name: name, widget: string }
+          - { label: Tagline, name: tagline, widget: string }
+          - { label: Intro, name: intro, widget: text }
+          - { label: Main Photo, name: main_photo, widget: image }
+
   - name: gallery
     label: Photos
     files:
