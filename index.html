@@ -92,11 +92,11 @@
 </head>
 <body>
   <div class="content">
-    <h1>REZAUL KARIM</h1>
-    <h2>Digital Marketing Learner</h2>
-    <p>I am learning digital marketing and I want to work as a freelancer.</p>
+    <h1 id="name">REZAUL KARIM</h1>
+    <h2 id="tagline">Digital Marketing Learner</h2>
+    <p id="intro">I am learning digital marketing and I want to work as a freelancer.</p>
     <div class="photo-card">
-      <img src="photo2.jpeg" alt="REZAUL KARIM">
+      <img id="mainPhoto" src="photo2.jpeg" alt="REZAUL KARIM">
     </div>
     <div class="gallery" id="gallery"></div>
   </div>
@@ -104,6 +104,19 @@
   <a class="admin-link" href="/admin/">Admin</a>
 
   <script>
+    fetch('data/site.json?v=' + Date.now())
+      .then(function (res) { return res.json(); })
+      .then(function (s) {
+        if (s.name) {
+          document.getElementById('name').textContent = s.name;
+          document.title = s.name;
+        }
+        if (s.tagline) document.getElementById('tagline').textContent = s.tagline;
+        if (s.intro) document.getElementById('intro').textContent = s.intro;
+        if (s.main_photo) document.getElementById('mainPhoto').src = s.main_photo;
+      })
+      .catch(function () {});
+
     fetch('data/photos.json?v=' + Date.now())
       .then(function (res) { return res.json(); })
       .then(function (data) {
