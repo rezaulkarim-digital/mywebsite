@@ -7,9 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
     body {
       margin: 0;
       min-height: 100vh;
@@ -21,10 +19,7 @@
       text-align: center;
       padding: 40px 20px 70px;
     }
-    .content {
-      max-width: 900px;
-      width: 100%;
-    }
+    .content { max-width: 900px; width: 100%; }
     h1 {
       margin: 0 0 10px;
       font-size: 54px;
@@ -61,22 +56,58 @@
     }
     .gallery {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
       gap: 24px;
       margin-top: 40px;
+      align-items: start;
     }
-    .gallery .photo-card {
-      margin: 0;
-      max-width: none;
-    }
+    .gallery .photo-card { margin: 0; max-width: none; }
+    .gallery figure { margin: 0; }
     .gallery figcaption {
       margin-top: 10px;
       font-size: 15px;
       color: #222;
     }
-    .gallery figure {
-      margin: 0;
+    .social {
+      margin-top: 12px;
+      text-align: left;
+      color: #222;
+      font-size: 14px;
     }
+    .social-bar { display: flex; gap: 10px; }
+    .social button {
+      font-family: inherit;
+      font-size: 14px;
+      border: 1px solid #d5dbe3;
+      background: #f5f7fa;
+      color: #222;
+      border-radius: 999px;
+      padding: 6px 14px;
+      cursor: pointer;
+    }
+    .social button.liked { background: #ffe3e8; border-color: #ff9bb0; }
+    .social button:disabled { opacity: 0.6; cursor: default; }
+    .comments-box { display: none; margin-top: 12px; }
+    .comments-box.open { display: block; }
+    .comment-list { max-height: 220px; overflow-y: auto; }
+    .comment {
+      padding: 8px 10px;
+      margin-bottom: 8px;
+      background: #f0f4f8;
+      border-radius: 10px;
+      word-wrap: break-word;
+    }
+    .comment b { display: block; font-size: 13px; }
+    .comment-form input, .comment-form textarea {
+      width: 100%;
+      font-family: inherit;
+      font-size: 14px;
+      padding: 8px 10px;
+      margin-top: 6px;
+      border: 1px solid #d5dbe3;
+      border-radius: 10px;
+    }
+    .comment-form button { margin-top: 8px; }
     .admin-link {
       position: fixed;
       left: 14px;
@@ -85,9 +116,7 @@
       color: rgba(255, 255, 255, 0.45);
       text-decoration: none;
     }
-    .admin-link:hover {
-      color: rgba(255, 255, 255, 0.9);
-    }
+    .admin-link:hover { color: rgba(255, 255, 255, 0.9); }
   </style>
 </head>
 <body>
@@ -103,9 +132,11 @@
 
   <a class="admin-link" href="/admin/">Admin</a>
 
-  <script>
+  <script src="firebase-config.js"></script>
+  <script type="module">
+    // ---- Name, intro, main photo ----
     fetch('data/site.json?v=' + Date.now())
-      .then(function (res) { return res.json(); })
+      .then(function (r) { return r.json(); })
       .then(function (s) {
         if (s.name) {
           document.getElementById('name').textContent = s.name;
@@ -117,10 +148,149 @@
       })
       .catch(function () {});
 
+    // ---- Firebase (likes and comments) ----
+    var db = null;
+    var fs = null;
+    try {
+      var appMod = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js');
+      fs = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js');
+      var app = appMod.initializeApp(window.firebaseConfig);
+      db = fs.getFirestore(app);
+    } catch (e) {
+      db = null;
+    }
+
+    function makeId(src) {
+      return String(src).replace(/[^a-zA-Z0-9]/g, '_').slice(-100);
+    }
+
+    function addSocial(fig, src) {
+      var id = makeId(src);
+      var box = document.createElement('div');
+      box.className = 'social';
+
+      var bar = document.createElement('div');
+      bar.className = 'social-bar';
+      var likeBtn = document.createElement('button');
+      var commentBtn = document.createElement('button');
+      commentBtn.textContent = 'Comments';
+      bar.appendChild(likeBtn);
+      bar.appendChild(commentBtn);
+      box.appendChild(bar);
+
+      // Likes
+      var count = 0;
+      var liked = false;
+      var likedKey = 'liked_' + id;
+      try { liked = localStorage.getItem(likedKey) === '1'; } catch (e) {}
+      var photoRef = fs.doc(db, 'photos', id);
+
+      function renderLike() {
+        likeBtn.textContent = (liked ? '\u2665 ' : '\u2661 ') + count;
+        likeBtn.className = liked ? 'liked' : '';
+      }
+      renderLike();
+
+      fs.getDoc(photoRef).then(function (snap) {
+        count = snap.exists() ? (snap.data().likes || 0) : 0;
+        renderLike();
+      }).catch(function () {});
+
+      likeBtn.addEventListener('click', function () {
+        if (liked) return;
+        liked = true;
+        count += 1;
+        renderLike();
+        try { localStorage.setItem(likedKey, '1'); } catch (e) {}
+        fs.setDoc(photoRef, { likes: fs.increment(1) }, { merge: true }).catch(function () {
+          liked = false;
+          count -= 1;
+          renderLike();
+          try { localStorage.removeItem(likedKey); } catch (e) {}
+        });
+      });
+
+      // Comments
+      var cbox = document.createElement('div');
+      cbox.className = 'comments-box';
+      var list = document.createElement('div');
+      list.className = 'comment-list';
+      var form = document.createElement('form');
+      form.className = 'comment-form';
+      var nameInput = document.createElement('input');
+      nameInput.placeholder = 'Your name';
+      nameInput.maxLength = 40;
+      var textInput = document.createElement('textarea');
+      textInput.placeholder = 'Write a comment...';
+      textInput.rows = 2;
+      textInput.maxLength = 500;
+      var sendBtn = document.createElement('button');
+      sendBtn.type = 'submit';
+      sendBtn.textContent = 'Send';
+      form.appendChild(nameInput);
+      form.appendChild(textInput);
+      form.appendChild(sendBtn);
+      cbox.appendChild(list);
+      cbox.appendChild(form);
+      box.appendChild(cbox);
+
+      function loadComments() {
+        var q = fs.query(fs.collection(db, 'photos', id, 'comments'), fs.orderBy('createdAt', 'asc'));
+        fs.getDocs(q).then(function (snap) {
+          list.textContent = '';
+          snap.forEach(function (d) {
+            var c = d.data();
+            var row = document.createElement('div');
+            row.className = 'comment';
+            var who = document.createElement('b');
+            who.textContent = c.name || '';
+            var msg = document.createElement('span');
+            msg.textContent = c.text || '';
+            row.appendChild(who);
+            row.appendChild(msg);
+            list.appendChild(row);
+          });
+          if (!snap.size) list.textContent = 'No comments yet.';
+        }).catch(function () {
+          list.textContent = 'Could not load comments.';
+        });
+      }
+
+      var loaded = false;
+      commentBtn.addEventListener('click', function () {
+        cbox.classList.toggle('open');
+        if (!loaded) { loaded = true; loadComments(); }
+      });
+
+      var lastSent = 0;
+      form.addEventListener('submit', function (ev) {
+        ev.preventDefault();
+        var n = nameInput.value.trim();
+        var t = textInput.value.trim();
+        if (!n || !t) return;
+        if (Date.now() - lastSent < 10000) return;
+        lastSent = Date.now();
+        sendBtn.disabled = true;
+        fs.addDoc(fs.collection(db, 'photos', id, 'comments'), {
+          name: n.slice(0, 40),
+          text: t.slice(0, 500),
+          createdAt: fs.serverTimestamp()
+        }).then(function () {
+          textInput.value = '';
+          loadComments();
+        }).catch(function () {}).then(function () {
+          sendBtn.disabled = false;
+        });
+      });
+
+      fig.appendChild(box);
+    }
+
+    // ---- Photo gallery ----
     fetch('data/photos.json?v=' + Date.now())
-      .then(function (res) { return res.json(); })
+      .then(function (r) { return r.json(); })
       .then(function (data) {
-        var box = document.getElementById('gallery');
+        var gallery = document.getElementById('gallery');
         (data.items || []).forEach(function (item) {
           if (!item.image) return;
           var fig = document.createElement('figure');
@@ -134,7 +304,8 @@
             cap.textContent = item.title;
             fig.appendChild(cap);
           }
-          box.appendChild(fig);
+          if (db) addSocial(fig, item.image);
+          gallery.appendChild(fig);
         });
       })
       .catch(function () {});
