@@ -1,6 +1,15 @@
 {
-  "name": "SAHED",
+  "name": "REZAUL KARIM",
   "tagline": "Digital Marketing Learner",
   "intro": "I am learning digital marketing and I want to work as a freelancer.",
-  "main_photo": "photo2.jpeg"
+  "main_photo": "photo2.jpeg",
+  "background": "sahed.jpg",
+  "name_color": "#ffffff",
+  "tagline_color": "#7dd3fc",
+  "text_color": "#e2e8f0",
+  "font": "Poppins",
+  "whatsapp": "",
+  "email": "",
+  "facebook": "",
+  "videos": []
 }
