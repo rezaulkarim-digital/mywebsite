@@ -1,15 +1,20 @@
 {
-  "name": "REZAUL KARIM",
+  "name": "SAHED",
   "tagline": "Digital Marketing Learner",
   "intro": "I am learning digital marketing and I want to work as a freelancer.",
   "main_photo": "photo2.jpeg",
   "background": "sahed.jpg",
-  "name_color": "#ffffff",
-  "tagline_color": "#7dd3fc",
-  "text_color": "#e2e8f0",
-  "font": "Poppins",
-  "whatsapp": "",
-  "email": "",
+  "name_color": "#0b0967",
+  "tagline_color": "#2b6782",
+  "text_color": "#982f39",
+  "font": "Montserrat",
+  "whatsapp": "+8801902220842",
+  "email": "rezaulkarim558410@gmail.com",
   "facebook": "",
-  "videos": []
+  "videos": [
+    {
+      "title": "",
+      "url": "https://youtu.be/bW7wUdp50Z8?si=U2Er8XWBnsqv7Su4"
+    }
+  ]
 }
