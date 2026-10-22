@@ -5,8 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>REZAUL KARIM</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+  <link id="fontLink" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
+    :root {
+      --name-color: #ffffff;
+      --tagline-color: #7dd3fc;
+      --text-color: #e2e8f0;
+    }
     * { box-sizing: border-box; }
     body {
       margin: 0;
@@ -24,22 +29,40 @@
       margin: 0 0 10px;
       font-size: 54px;
       font-weight: 700;
-      color: #ffffff;
+      color: var(--name-color);
       letter-spacing: 2px;
     }
     h2 {
       margin: 0 0 25px;
       font-size: 22px;
       font-weight: 600;
-      color: #7dd3fc;
+      color: var(--tagline-color);
     }
     p {
       margin: 0 auto;
       max-width: 650px;
       font-size: 18px;
       line-height: 1.7;
-      color: #e2e8f0;
+      color: var(--text-color);
     }
+    .contact {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+      margin-top: 22px;
+    }
+    .contact a {
+      text-decoration: none;
+      font-size: 15px;
+      font-weight: 600;
+      color: #ffffff;
+      background: rgba(255, 255, 255, 0.16);
+      border: 1px solid rgba(255, 255, 255, 0.35);
+      padding: 9px 18px;
+      border-radius: 999px;
+    }
+    .contact a:hover { background: rgba(255, 255, 255, 0.3); }
     .photo-card {
       width: 100%;
       max-width: 380px;
@@ -54,6 +77,35 @@
       width: 100%;
       border-radius: 12px;
     }
+    .videos {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 24px;
+      margin-top: 40px;
+    }
+    .video-card {
+      background: #ffffff;
+      padding: 12px;
+      border-radius: 20px;
+      box-shadow: 0 20px 45px rgba(0, 0, 0, 0.6);
+      color: #222;
+    }
+    .video-frame {
+      position: relative;
+      width: 100%;
+      padding-top: 56.25%;
+      border-radius: 12px;
+      overflow: hidden;
+      background: #000;
+    }
+    .video-frame iframe {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      border: 0;
+    }
+    .video-card .vtitle { margin-top: 10px; font-size: 15px; }
     .gallery {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
@@ -63,17 +115,8 @@
     }
     .gallery .photo-card { margin: 0; max-width: none; }
     .gallery figure { margin: 0; }
-    .gallery figcaption {
-      margin-top: 10px;
-      font-size: 15px;
-      color: #222;
-    }
-    .social {
-      margin-top: 12px;
-      text-align: left;
-      color: #222;
-      font-size: 14px;
-    }
+    .gallery figcaption { margin-top: 10px; font-size: 15px; color: #222; }
+    .social { margin-top: 12px; text-align: left; color: #222; font-size: 14px; }
     .social-bar { display: flex; gap: 10px; }
     .social button {
       font-family: inherit;
@@ -124,9 +167,11 @@
     <h1 id="name">REZAUL KARIM</h1>
     <h2 id="tagline">Digital Marketing Learner</h2>
     <p id="intro">I am learning digital marketing and I want to work as a freelancer.</p>
+    <div class="contact" id="contact"></div>
     <div class="photo-card">
       <img id="mainPhoto" src="photo2.jpeg" alt="REZAUL KARIM">
     </div>
+    <div class="videos" id="videos"></div>
     <div class="gallery" id="gallery"></div>
   </div>
 
@@ -134,7 +179,29 @@
 
   <script src="firebase-config.js"></script>
   <script type="module">
-    // ---- Name, intro, main photo ----
+    // ---- Helpers ----
+    function isColor(v) { return /^#[0-9a-fA-F]{3,8}$/.test(v || ''); }
+    function isHttps(v) { return /^https:\/\//i.test(v || ''); }
+
+    var FONTS = ['Poppins', 'Roboto', 'Lato', 'Montserrat', 'Playfair Display', 'Oswald'];
+
+    function youtubeId(url) {
+      var m = String(url || '').match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?(?:.*&)?v=|shorts\/|embed\/|live\/))([A-Za-z0-9_-]{11})/);
+      return m ? m[1] : null;
+    }
+
+    function addLink(box, text, href) {
+      var a = document.createElement('a');
+      a.textContent = text;
+      a.href = href;
+      if (/^https:/i.test(href)) {
+        a.target = '_blank';
+        a.rel = 'noopener noreferrer';
+      }
+      box.appendChild(a);
+    }
+
+    // ---- Site settings (name, look, contact, videos) ----
     fetch('data/site.json?v=' + Date.now())
       .then(function (r) { return r.json(); })
       .then(function (s) {
@@ -145,6 +212,57 @@
         if (s.tagline) document.getElementById('tagline').textContent = s.tagline;
         if (s.intro) document.getElementById('intro').textContent = s.intro;
         if (s.main_photo) document.getElementById('mainPhoto').src = s.main_photo;
+
+        if (s.background) {
+          document.body.style.backgroundImage = 'url("' + String(s.background).replace(/"/g, '%22') + '")';
+          document.body.style.backgroundPosition = 'center';
+          document.body.style.backgroundSize = 'cover';
+          document.body.style.backgroundRepeat = 'no-repeat';
+          document.body.style.backgroundAttachment = 'fixed';
+        }
+        var root = document.documentElement.style;
+        if (isColor(s.name_color)) root.setProperty('--name-color', s.name_color);
+        if (isColor(s.tagline_color)) root.setProperty('--tagline-color', s.tagline_color);
+        if (isColor(s.text_color)) root.setProperty('--text-color', s.text_color);
+
+        if (s.font && FONTS.indexOf(s.font) !== -1) {
+          document.getElementById('fontLink').href =
+            'https://fonts.googleapis.com/css2?family=' + s.font.replace(/ /g, '+') + ':wght@400;600;700&display=swap';
+          document.body.style.fontFamily = "'" + s.font + "', Arial, sans-serif";
+        }
+
+        // Contact buttons
+        var contact = document.getElementById('contact');
+        var wa = String(s.whatsapp || '').replace(/\D/g, '');
+        if (wa) addLink(contact, 'WhatsApp', 'https://wa.me/' + wa);
+        if (s.email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s.email)) addLink(contact, 'Email', 'mailto:' + s.email);
+        if (isHttps(s.facebook)) addLink(contact, 'Facebook', s.facebook);
+
+        // Videos (YouTube)
+        var vbox = document.getElementById('videos');
+        (s.videos || []).forEach(function (v) {
+          var id = youtubeId(v.url);
+          if (!id) return;
+          var card = document.createElement('div');
+          card.className = 'video-card';
+          var frame = document.createElement('div');
+          frame.className = 'video-frame';
+          var iframe = document.createElement('iframe');
+          iframe.src = 'https://www.youtube.com/embed/' + id;
+          iframe.title = v.title || 'Video';
+          iframe.loading = 'lazy';
+          iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
+          iframe.allowFullscreen = true;
+          frame.appendChild(iframe);
+          card.appendChild(frame);
+          if (v.title) {
+            var t = document.createElement('div');
+            t.className = 'vtitle';
+            t.textContent = v.title;
+            card.appendChild(t);
+          }
+          vbox.appendChild(card);
+        });
       })
       .catch(function () {});
 
@@ -178,7 +296,6 @@
       bar.appendChild(commentBtn);
       box.appendChild(bar);
 
-      // Likes
       var count = 0;
       var liked = false;
       var likedKey = 'liked_' + id;
@@ -210,7 +327,6 @@
         });
       });
 
-      // Comments
       var cbox = document.createElement('div');
       cbox.className = 'comments-box';
       var list = document.createElement('div');
